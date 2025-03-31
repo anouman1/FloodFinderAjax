@@ -213,7 +213,7 @@
     };
     const GITHUB_OWNER = 'anouman1';
     const GITHUB_REPO = 'FloodFinderAjax';
-    const GITHUB_TOKEN = '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';
+    const GITHUB_TOKEN = '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';
     const GITHUB_PATH = 'floods.json';
 
     const $ = (id) => document.getElementById(id);
@@ -294,96 +294,100 @@
 
     function toRad(deg) { return deg * Math.PI / 180; }
 
-    async function fetchFloodsFromGithub() {
-        try {
-            const response = await fetch(
-                `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
-                {
-                    headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization': `token ${GITHUB_TOKEN}`
-                    }
+async function fetchFloodsFromGithub() {
+    try {
+        const response = await fetch(
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
+            {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${GITHUB_TOKEN}`
                 }
-            );
-            if (response.status === 404) {
-                console.log('No floods.json found, starting fresh.');
-                return { floods: [] };
             }
-            const data = await response.json();
-            const content = atob(data.content);
-            return JSON.parse(content);
-        } catch (error) {
-            console.error('Error fetching floods from Github:', error);
+        );
+        if (response.status === 404) {
+            console.log('No floods.json found, starting fresh.');
             return { floods: [] };
         }
-    }
-
-    async function loadGithubFloods() {
-        const githubData = await fetchFloodsFromGithub();
-        githubData.floods.forEach(flood => {
-            const alert = {
-                latitude: flood.latitude,
-                longitude: flood.longitude,
-                description: flood.description,
-                severity: flood.severity || 'unknown',
-                timestamp: flood.date || new Date().toISOString(),
-                locationAddress: flood.location
-            };
-            addAlertToMap(alert);
-            addAlertToList(alert);
-        });
-    }
-
-    async function updateGithubFloods(newAlert) {
-        try {
-            const currentDataResponse = await fetch(
-                `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
-                {
-                    headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization': `token ${GITHUB_TOKEN}`
-                    }
-                }
-            );
-            let currentData = { floods: [] };
-            let sha = null;
-            if (currentDataResponse.ok) {
-                const data = await currentDataResponse.json();
-                currentData = JSON.parse(atob(data.content));
-                sha = data.sha;
-            }
-            currentData.floods.push({
-                latitude: newAlert.latitude,
-                longitude: newAlert.longitude,
-                location: newAlert.locationAddress,
-                description: newAlert.description,
-                severity: newAlert.severity,
-                date: newAlert.timestamp
-            });
-            const updatedContent = btoa(JSON.stringify(currentData, null, 2));
-            const commitResponse = await fetch(
-                `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Accept': 'application/vnd.github.v3+json',
-                        'Authorization': `token ${GITHUB_TOKEN}`
-                    },
-                    body: JSON.stringify({
-                        message: `Add new flood alert from ${newAlert.locationAddress || 'unknown location'}`,
-                        content: updatedContent,
-                        sha: sha
-                    })
-                }
-            );
-            if (!commitResponse.ok) {
-                throw new Error('Failed to update Github');
-            }
-        } catch (error) {
-            console.error('Error updating floods on Github:', error);
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
+        const data = await response.json();
+        const content = atob(data.content);
+        return JSON.parse(content);
+    } catch (error) {
+        console.error('Error fetching floods from Github:', error);
+        return { floods: [] };
     }
+}
 
+async function loadGithubFloods() {
+    const githubData = await fetchFloodsFromGithub();
+    githubData.floods.forEach(flood => {
+        const alert = {
+            latitude: flood.latitude,
+            longitude: flood.longitude,
+            description: flood.description,
+            severity: flood.severity || 'unknown',
+            timestamp: flood.date || new Date().toISOString(),
+            locationAddress: flood.location
+        };
+        addAlertToMap(alert);
+        addAlertToList(alert);
+    });
+}
+
+async function updateGithubFloods(newAlert) {
+    try {
+        const currentDataResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
+            {
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                }
+            }
+        );
+        let currentData = { floods: [] };
+        let sha = null;
+        if (currentDataResponse.ok) {
+            const data = await currentDataResponse.json();
+            currentData = JSON.parse(atob(data.content));
+            sha = data.sha;
+        } else if (currentDataResponse.status !== 404) {
+            throw new Error(`Failed to fetch current file: ${currentDataResponse.status}`);
+        }
+        currentData.floods.push({
+            latitude: newAlert.latitude,
+            longitude: newAlert.longitude,
+            location: newAlert.locationAddress,
+            description: newAlert.description,
+            severity: newAlert.severity,
+            date: newAlert.timestamp
+        });
+        const updatedContent = btoa(JSON.stringify(currentData, null, 2));
+        const commitResponse = await fetch(
+            `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Authorization': `token ${GITHUB_TOKEN}`
+                },
+                body: JSON.stringify({
+                    message: `Add new flood alert from ${newAlert.locationAddress || 'unknown location'}`,
+                    content: updatedContent,
+                    sha: sha
+                })
+            }
+        );
+        if (!commitResponse.ok) {
+            throw new Error(`Failed to update Github: ${commitResponse.status}`);
+        }
+    } catch (error) {
+        console.error('Error updating floods on Github:', error);
+    }
+} 
     $('alertForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const description = $('description').value;
