@@ -344,7 +344,7 @@ async function updateGithubFloods(newAlert) {
             {
                 headers: {
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `token ${GITHUB_TOKEN}`
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`
                 }
             }
         );
@@ -372,7 +372,7 @@ async function updateGithubFloods(newAlert) {
                 method: 'PUT',
                 headers: {
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `token ${GITHUB_TOKEN}`
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`
                 },
                 body: JSON.stringify({
                     message: `Add new flood alert from ${newAlert.locationAddress || 'unknown location'}`,
