@@ -301,7 +301,7 @@ async function fetchFloodsFromGithub() {
             {
                 headers: {
                     'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `token ${GITHUB_TOKEN}`
+                    'Authorization': `Bearer ${GITHUB_TOKEN}`
                 }
             }
         );
