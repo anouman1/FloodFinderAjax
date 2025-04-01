@@ -299,9 +299,9 @@ async function fetchFloodsFromGithub() {
         const response = await fetch(
             `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
             {
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`
+               $headers = @ {
+                    "Authorization" = "Bearer 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"
+                    "Accept" = "application/vnd.github.v3+json"
                 }
             }
         );
@@ -342,9 +342,9 @@ async function updateGithubFloods(newAlert) {
         const currentDataResponse = await fetch(
             `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
             {
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`
+                $headers = @ {
+                    "Authorization" = "Bearer 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"
+                    "Accept" = "application/vnd.github.v3+json"
                 }
             }
         );
@@ -370,9 +370,9 @@ async function updateGithubFloods(newAlert) {
             `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`,
             {
                 method: 'PUT',
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `Bearer ${GITHUB_TOKEN}`
+                $headers = @ {
+                    "Authorization" = "Bearer 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"
+                    "Accept" = "application/vnd.github.v3+json"
                 },
                 body: JSON.stringify({
                     message: `Add new flood alert from ${newAlert.locationAddress || 'unknown location'}`,
